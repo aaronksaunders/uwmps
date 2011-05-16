@@ -1,2 +1,4 @@
 tmp
-build/iphone/**
+build/iphone/*
+build/android/*
+
