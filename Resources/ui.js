@@ -3,9 +3,19 @@
     var ui = {};
 
     Ti.App.addEventListener("app:got.location", function(d) {
-        Ti.API.debug("in ui "+d);
+        Ti.API.debug("app:got.location "+d);
         ui.f_lng = d.longitude;
         ui.f_lat = d.latitude;
+    });
+    Ti.App.addEventListener("app:reset.map.location", function(d) {
+        Ti.API.debug("app:reset.map.location "+d);
+        //
+        ui.mapView.setLocation({
+            latitude: d.latitude,
+            longitude: d.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01
+        });
     });
     /**
      *
@@ -29,17 +39,18 @@
         }
     }
 
-    function addMapToWindow(_win) {
+    function addMapToWindow(_win,_showSearch) {
         //
         // CREATE MAP VIEW
         //
         var mapView = Titanium.Map.createView({
+            top: ((_showSearch == true) ? 43: 0 ),
             mapType: Titanium.Map.STANDARD_TYPE,
             region: {
                 latitude:ui.f_lat,
                 longitude:ui.f_lng,
-                latitudeDelta:0.2,
-                longitudeDelta:0.2
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01
             },
             animate:true,
             regionFit:true,
@@ -47,16 +58,19 @@
             //annotations:[map1,apple]
         });
         _win.add(mapView);
+        ui.mapView = mapView;
         return mapView;
     }
 
     function selectionTableListener(e) {
 
-        Ti.API.info('rowData: ' + e.rowData);
-        var win = ui.displayMapView(ui.currentWindow);
+        Ti.API.info('rowData: ' + JSON.stringify(e.rowData));
+        var rowID = e.rowData.id;
+
+        var win = ui.displayMapView(ui.currentWindow, (rowID == "add_location"));
 
         // map stuff
-        addMapToWindow(win);
+        addMapToWindow(win, (rowID == "add_location"));
 
         win.addEventListener('close', function(e) {
             ui.currentWindow.title = "Main Window";
@@ -66,6 +80,8 @@
             animated:true
         });
 
+        ui.currentWindow = win;
+
     }
 
     /** ------------------------------------------------------------------------
@@ -73,12 +89,54 @@
      *
      *
      ------------------------------------------------------------------------ */
-    ui.displayMapView = function(_window) {
+    function setUpSearchBar(_win) {
+
+        var searchCtrl = Titanium.UI.createSearchBar({
+            //barColor:'#000',
+            showCancel:true,
+            height:43,
+            top:0,
+        });
+        _win.add( searchCtrl);
+
+        searchCtrl.addEventListener('cancel', function(e) {
+            searchCtrl.blur();
+        });
+        searchCtrl.addEventListener('return', function(event) {
+
+            Ti.API.debug(event);
+
+            uwmps.geo.searchForLocation(event.value);
+
+            searchCtrl.blur();
+
+        });
+        searchCtrl.addEventListener('focus', function() {
+            Ti.API.debug('search bar focus');
+        });
+        searchCtrl.addEventListener('blur', function(evt) {
+            Ti.API.debug('search bar blur');
+
+        });
+        ui.displayMapView.searchBar = searchCtrl;
+    }
+
+    /** ------------------------------------------------------------------------
+     *
+     *
+     *
+     ------------------------------------------------------------------------ */
+    ui.displayMapView = function(_window, showSearchBar) {
         var win1 = Titanium.UI.createWindow({
             backgroundColor:'#fff',
             tabBarHidden:true
         });
 
+        if (showSearchBar == true) {
+            setUpSearchBar(win1)
+        } else {
+            ui.displayMapView.searchBar = null;
+        }
         var buttons = [{
             title:'Map',
             enabled:true
@@ -119,7 +177,8 @@
                 fontSize:20
             },
             height: '110%',
-            hasChild: true
+            hasChild: true,
+            id:"use_location"
         });
 
         var iv = Ti.UI.createImageView({
@@ -151,7 +210,8 @@
                 fontSize:20
             },
             height: '110%',
-            hasChild: true
+            hasChild: true,
+            id:"add_location"
         });
 
         iv = Ti.UI.createImageView({

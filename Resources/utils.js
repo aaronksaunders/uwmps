@@ -16,7 +16,7 @@
             currentWindow.toolActInd.show();
             currentWindow.toolActInd.message = 'Loading...';
         } else {
-            movieTest.currentWindow = currentWindow;
+            //movieTest.currentWindow = currentWindow;
             currentWindow.toolActInd = Titanium.UI.createActivityIndicator();
             currentWindow.toolActInd.style = Titanium.UI.iPhone.ActivityIndicatorStyle.PLAIN;
             currentWindow.toolActInd.font = {
@@ -37,7 +37,7 @@
      *
      */
     uwmps.hideActivityIndicator = function(currentWindow) {
-        var win = currentWindow || movieTest.currentWindow;
+        var win = currentWindow || uwmps.ui.currentWindow;
 
         if (isAndroid) {
             if (win.toolActInd != undefined) {
