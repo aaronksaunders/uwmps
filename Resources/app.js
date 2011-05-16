@@ -7,6 +7,7 @@ var uwmps = {};
 Titanium.include('utils.js');
 Titanium.include('geo.js');
 Titanium.include('ui.js');
+Titanium.include('database.js');
 //Titanium.include('http.js');
 
 // Make namespace globally available
@@ -15,3 +16,5 @@ Ti.App.uwmps = uwmps;
 Ti.App.uwmps.isAndroid = (Titanium.Platform.osname == 'android');
 
 var window = uwmps.ui.createLocationWindow();
+
+uwmps.db.getFavorites();

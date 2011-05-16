@@ -1,6 +1,7 @@
 (function() {
     var isAndroid = uwmps.isAndroid;
     var ui = {};
+    ui.windowStack = [];
 
     Ti.App.addEventListener("app:got.location", function(d) {
         Ti.API.debug("app:got.location "+d);
@@ -72,15 +73,36 @@
         // map stuff
         addMapToWindow(win, (rowID == "add_location"));
 
-        win.addEventListener('close', function(e) {
-            ui.currentWindow.title = "Main Window";
-        });
         ui.currentWindow.title = "Back";
         ui.currentTab.open(win, {
             animated:true
         });
 
+        // manage window stack
+        ui.windowStack.push({
+            "win":win,
+            "title": win.title
+        });
         ui.currentWindow = win;
+
+    }
+
+    /** ------------------------------------------------------------------------
+     *
+     *
+     *
+     ------------------------------------------------------------------------ */
+    function saveNewLocation(_event) {
+        Ti.API.debug("Location Coordinates " +JSON.stringify(ui.mapView.getLocation()));
+        Ti.API.debug("Location Name " + ui.displayMapView.searchBar.value);
+        var fav = {
+            "location" : {
+                "latitude" : ui.mapView.getLocation().latitude,
+                "longitude" : ui.mapView.getLocation().longitude,
+            },
+            "name" : ui.displayMapView.searchBar.value
+        };
+        uwmps.db.addFavorite(fav);
 
     }
 
@@ -134,6 +156,14 @@
 
         if (showSearchBar == true) {
             setUpSearchBar(win1)
+
+            // put button to save location
+            var btn = Ti.UI.createButton({
+                title:'Save',
+                enabled: true
+            });
+            win1.rightNavButton = btn;
+            btn.addEventListener('click',saveNewLocation);
         } else {
             ui.displayMapView.searchBar = null;
         }
@@ -264,6 +294,11 @@
             backgroundColor:'#fff',
             tabBarHidden:true
         });
+
+        win1.addEventListener('focus', function() {
+            win1.title = 'Main Window';
+            ui.currentWindow = win1;
+        });
         var tab1 = Titanium.UI.createTab({
             icon:'KS_nav_views.png',
             title:'Tab 1',
@@ -310,6 +345,12 @@
         // keep track of current window and tab
         ui.currentTab = tab1;
         ui.currentWindow = win1;
+
+        // manage window stack
+        ui.windowStack.push({
+            "win":win1,
+            "title": win1.title
+        });
 
         ui.createSelectionTable(win1);
         return win1;

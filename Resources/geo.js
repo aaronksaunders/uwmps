@@ -83,7 +83,7 @@
                         alert('error ' + JSON.stringify(evt.error));
                         return;
                     } else {
-                        Ti.API.debug(JSON.stringify(evt));
+                        Ti.API.debug(" searchForLocation " +JSON.stringify(evt));
 
                         Ti.App.fireEvent("app:reset.map.location",  evt );
 
